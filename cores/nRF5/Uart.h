@@ -35,6 +35,7 @@ class Uart : public HardwareSerial
     Uart(NRF_UARTE_Type *_nrfUart, IRQn_Type _IRQn, uint8_t _pinRX, uint8_t _pinTX, uint8_t _pinCTS, uint8_t _pinRTS);
 
     void setPins(uint8_t pin_rx, uint8_t pin_tx);
+    void setPins(uint8_t pin_rx, uint8_t pin_tx, uint8_t pin_cts, uint8_t pin_rts);
     void begin(unsigned long baudRate);
     void begin(unsigned long baudrate, uint16_t config);
     void end();

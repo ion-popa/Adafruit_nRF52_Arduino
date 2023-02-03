@@ -67,6 +67,14 @@ void Uart::setPins(uint8_t pin_rx, uint8_t pin_tx)
   uc_pinTX = g_ADigitalPinMap[pin_tx];
 }
 
+void Uart::setPins(uint8_t pin_rx, uint8_t pin_tx, uint8_t pin_cts, uint8_t pin_rts)
+{
+  uc_pinRX = g_ADigitalPinMap[pin_rx];
+  uc_pinTX = g_ADigitalPinMap[pin_tx];
+  uc_pinCTS = g_ADigitalPinMap[pin_cts];
+  uc_pinRTS = g_ADigitalPinMap[pin_rts];
+}
+
 void Uart::begin(unsigned long baudrate)
 {
   begin(baudrate, (uint16_t)SERIAL_8N1);
