@@ -37,6 +37,19 @@ static volatile uint32_t* pincfg_reg(uint32_t pin)
   return &port->PIN_CNF[pin];
 }
 
+#if WIRE_INTERFACES_COUNT > 0
+static void wireTimerCb(TimerHandle_t xTimerID)
+{
+    Wire.end();
+}
+#endif
+#if WIRE_INTERFACES_COUNT > 1
+static void wire1TimerCb(TimerHandle_t xTimerID)
+{
+    Wire1.end();
+}
+#endif
+
 TwoWire::TwoWire(NRF_TWIM_Type * p_twim, NRF_TWIS_Type * p_twis, IRQn_Type IRQn, uint8_t pinSDA, uint8_t pinSCL)
 {
   this->_p_twim = p_twim;
@@ -45,11 +58,32 @@ TwoWire::TwoWire(NRF_TWIM_Type * p_twim, NRF_TWIS_Type * p_twis, IRQn_Type IRQn,
   this->_uc_pinSDA = g_ADigitalPinMap[pinSDA];
   this->_uc_pinSCL = g_ADigitalPinMap[pinSCL];
   transmissionBegun = false;
+
+  #if WIRE_INTERFACES_COUNT > 0
+  if(p_twim == NRF_TWIM0)
+  {
+    activityTimer.begin(acivityTimerTimeout, wireTimerCb, NULL, false);
+  }
+  #endif
+  #if WIRE_INTERFACES_COUNT > 1
+  if(p_twim == NRF_TWIM1)
+  {
+    activityTimer.begin(acivityTimerTimeout, wire1TimerCb, NULL, false);
+  }
+  #endif
+
+  configured = false;
+  begun = false;
+  
 }
 
 void TwoWire::begin(void) {
   //Main Mode
   master = true;
+  if(begun)
+  {
+    return;
+  }
 
   *pincfg_reg(_uc_pinSCL) = ((uint32_t)GPIO_PIN_CNF_DIR_Input         << GPIO_PIN_CNF_DIR_Pos)
                            | ((uint32_t)GPIO_PIN_CNF_INPUT_Connect    << GPIO_PIN_CNF_INPUT_Pos)
@@ -71,6 +105,11 @@ void TwoWire::begin(void) {
   NVIC_ClearPendingIRQ(_IRQn);
   NVIC_SetPriority(_IRQn, 3);
   NVIC_EnableIRQ(_IRQn);
+
+  activityTimer.reset();
+  activityTimer.start();
+  configured= true;
+  begun=true;
 }
 
 void TwoWire::begin(uint8_t address) {
@@ -144,6 +183,25 @@ void TwoWire::end() {
   {
     _p_twis->ENABLE = (TWIS_ENABLE_ENABLE_Disabled << TWIS_ENABLE_ENABLE_Pos);
   }
+#if WIRE_INTERFACES_COUNT > 0
+  if(_p_twim == NRF_TWIM0)
+  {
+    asm("nop");
+    *(volatile uint32_t *)0x40003FFC = 0;
+    *(volatile uint32_t *)0x40003FFC;
+    *(volatile uint32_t *)0x40003FFC = 1;
+  }
+#endif
+#if WIRE_INTERFACES_COUNT > 0
+  if(_p_twim == NRF_TWIM1)
+  {
+    *(volatile uint32_t *)0x40004FFC = 0;
+    *(volatile uint32_t *)0x40004FFC;
+    *(volatile uint32_t *)0x40004FFC = 1;
+  }
+#endif
+  begun = false;
+  activityTimer.stop();
 }
 
 uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
@@ -151,6 +209,13 @@ uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
   if(quantity == 0)
   {
     return 0;
+  }
+  if(configured && !begun)
+  {
+    begin();
+  }else
+  {
+    activityTimer.reset();
   }
 
   size_t byteRead = 0;
@@ -199,6 +264,13 @@ uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity)
 
 void TwoWire::beginTransmission(uint8_t address) {
   // save address of target and clear buffer
+  if(configured && !begun)
+  {
+    begin();
+  }else
+  {
+    activityTimer.reset();
+  }
   txAddress = address;
   txBuffer.clear();
 
@@ -213,6 +285,13 @@ void TwoWire::beginTransmission(uint8_t address) {
 //  4 : Other error
 uint8_t TwoWire::endTransmission(bool stopBit)
 {
+  if(configured && !begun)
+  {
+    begin();
+  }else
+  {
+    activityTimer.reset();
+  }
   transmissionBegun = false ;
 
   // Start I2C transmission
@@ -284,6 +363,13 @@ size_t TwoWire::write(uint8_t ucData)
   if ( !transmissionBegun || txBuffer.isFull() )
   {
     return 0 ;
+  }
+  if(configured && !begun)
+  {
+    begin();
+  }else
+  {
+    activityTimer.reset();
   }
 
   txBuffer.store_char( ucData ) ;

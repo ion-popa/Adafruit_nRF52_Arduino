@@ -73,6 +73,7 @@ void Uart::setPins(uint8_t pin_rx, uint8_t pin_tx, uint8_t pin_cts, uint8_t pin_
   uc_pinTX = g_ADigitalPinMap[pin_tx];
   uc_pinCTS = g_ADigitalPinMap[pin_cts];
   uc_pinRTS = g_ADigitalPinMap[pin_rts];
+  uc_hwFlow = 1;
 }
 
 void Uart::begin(unsigned long baudrate)

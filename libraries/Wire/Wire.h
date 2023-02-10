@@ -26,6 +26,7 @@
 #include "Stream.h"
 #include "variant.h"
 #include "RingBuffer.h"
+#include "Arduino.h"
 
 // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
@@ -82,6 +83,10 @@ class TwoWire : public Stream
     bool receiving;
     bool transmissionBegun;
     bool suspended;
+    bool begun;
+    bool configured;
+    SoftwareTimer activityTimer;
+    int acivityTimerTimeout = 5000; //ms
 
     // RX Buffer
     RingBuffer rxBuffer;
