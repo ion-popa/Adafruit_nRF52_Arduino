@@ -488,6 +488,11 @@ void TwoWire::onService(void)
   }
 }
 
+void TwoWire::setActivityTimerTimeout(uint32_t timeout)
+{
+	acivityTimerTimeout = timeout > 100 ? timeout : 100;
+}
+
 #if WIRE_INTERFACES_COUNT > 0
 TwoWire Wire(NRF_TWIM0, NRF_TWIS0, SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQn, PIN_WIRE_SDA, PIN_WIRE_SCL);
 
