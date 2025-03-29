@@ -61,6 +61,9 @@ class TwoWire : public Stream
     void onRequest(void(*)(void));
     void onService(void);
 
+    bool lock(uint32_t timeoutMs);
+    bool unlock();
+
     inline size_t write(unsigned long n) { return write((uint8_t)n); }
     inline size_t write(long n)          { return write((uint8_t)n); }
     inline size_t write(unsigned int n)  { return write((uint8_t)n); }
@@ -99,6 +102,9 @@ class TwoWire : public Stream
     // Callback user functions
     void (*onRequestCallback)(void);
     void (*onReceiveCallback)(int);
+
+    SemaphoreHandle_t mI2cMutex = xSemaphoreCreateMutex();
+
 
     // TWI clock frequency
     static const uint32_t TWI_CLOCK = 100000;

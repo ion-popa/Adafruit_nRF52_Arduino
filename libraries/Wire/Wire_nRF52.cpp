@@ -493,6 +493,16 @@ void TwoWire::setActivityTimerTimeout(uint32_t timeout)
 	acivityTimerTimeout = timeout > 100 ? timeout : 100;
 }
 
+bool TwoWire::lock(uint32_t timeoutMs)
+{
+    return xSemaphoreTake(mI2cMutex, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
+}
+
+bool TwoWire::unlock()
+{
+    return xSemaphoreGive(mI2cMutex) == pdTRUE;
+}
+
 #if WIRE_INTERFACES_COUNT > 0
 TwoWire Wire(NRF_TWIM0, NRF_TWIS0, SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQn, PIN_WIRE_SDA, PIN_WIRE_SCL);
 
