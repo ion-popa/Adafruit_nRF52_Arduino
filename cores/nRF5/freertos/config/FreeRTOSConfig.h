@@ -55,7 +55,9 @@
 #define configTICK_RATE_HZ                                       1024
 #define configMAX_PRIORITIES                                     ( 5 )
 #define configMINIMAL_STACK_SIZE                                 ( 100 )
-#define configTOTAL_HEAP_SIZE                                    ( 4096 ) /* not used since we use malloc */
+#ifndef configTOTAL_HEAP_SIZE
+#error "configTOTAL_HEAP_SIZE is not defined. Please define it in platformio.ini or FreeRTOSConfig.h"
+#endif
 #define configMAX_TASK_NAME_LEN                                  ( 8 )
 #define configUSE_16_BIT_TICKS                                   0
 #define configIDLE_SHOULD_YIELD                                  1
