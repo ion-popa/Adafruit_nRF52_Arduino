@@ -56,7 +56,7 @@
 #define configMAX_PRIORITIES                                     ( 5 )
 #define configMINIMAL_STACK_SIZE                                 ( 100 )
 #ifndef configTOTAL_HEAP_SIZE
-#error "configTOTAL_HEAP_SIZE is not defined. Please define it in platformio.ini or FreeRTOSConfig.h"
+	#define configTOTAL_HEAP_SIZE                                ( 4096 ) //Adjust value in platform.ini
 #endif
 #define configMAX_TASK_NAME_LEN                                  ( 8 )
 #define configUSE_16_BIT_TICKS                                   0
